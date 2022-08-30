@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+import subprocess
+import re
+
+
+# list all usb hosts and obtain the host number
+outs = subprocess.check_output("ls -d /sys/bus/usb/devices/*/host*/target*", shell=True).splitlines()
+
+# define the match pattern for host number
+hostReg = re.compile("/sys/bus/usb/devices/(?P<usb>.+)/host.+/target(?P<target>\d+:\d+:\d+)")
+devReg  = re.compile(".+/(?P<dev>\d+:\d+:\d+:\d+)")
+
+def get_file_content(path):
+    try:
+        out = subprocess.check_output("cat {0}".format(path), shell=True, stderr=subprocess.DEVNULL).strip().decode("utf-8")
+    except:
+        return ""
+    return out if out else ""
+
+
+if __name__ == "__main__":
+    infos = []
+    header_line = "{usb:<12}\t{dev:<12}\t{size:<12}\t{vendor:<12}\t{model:<20}\t{wwn:<20}"
+    print(header_line.format(usb="usb", dev="dev", size="size", vendor="vendor", model="model", wwn="wwn"))
+    print("-"*80)
+    for path in outs:
+        path = path.decode("utf-8")
+        # print(path)
+        m = re.match(hostReg, path)
+        t = m["target"] if m else ""
+        usb = m["usb"] if m else ""
+        # print("usb bus: {0}".format(usb))
+        # print("target number: {0}".format(t))
+        target_path = path + "/" + t + "*"
+        devpaths = subprocess.check_output("ls -d {0}".format(target_path), shell=True).splitlines()
+        for devpath in devpaths:
+            devpath = devpath.decode("utf-8")
+            # print (devpath)
+            m = re.match(devReg, devpath)
+            d = m["dev"] if m else ""
+            # print ("dev number: {0}".format(d))
+            if d:
+                info = {
+                    "usb"       : usb,
+                    "dev"       : d,
+                    "vendor"    : get_file_content ("{0}/vendor".format(devpath)),
+                    "wwn"       : get_file_content ("{0}/wwid".format(devpath)),
+                    "model"     : get_file_content ("{0}/model".format(devpath)),
+                }
+                size = get_file_content ("{0}/block/*/size".format(devpath))
+                size = float(size)*512/(2**40) if size else 0.0
+                info["size"] = "{:.1f}TB".format(size)
+                infos.append(info)
+            else:
+                continue
+    for info in infos:
+        print(header_line.format(usb=info["usb"], dev=info["dev"], size=info["size"], vendor=info["vendor"], model=info["model"], wwn=info["wwn"]))
