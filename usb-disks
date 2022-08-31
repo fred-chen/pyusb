@@ -48,7 +48,7 @@ if __name__ == "__main__":
                 # calculate size in TB
                 size = get_file_content ("{0}/block/*/size".format(devpath))
                 size = float(size)*512/(2**40) if size else 0.0
-                info["size"] = "{:.1f}TB".format(size)
+                info["size"] = "{:>5.1f} TB".format(size)
 
                 # get device path
                 dev_file = '/dev/' + subprocess.check_output('basename `ls -d {0}/block/*`'.format(devpath), shell=True).strip().decode("utf-8")
