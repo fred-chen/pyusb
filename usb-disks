@@ -21,9 +21,9 @@ def get_file_content(path):
 
 if __name__ == "__main__":
     infos = []
-    header_line = "{usb:<12}\t{dev:<12}\t{size:<12}\t{vendor:<12}\t{model:<20}\t{wwn:<20}"
-    print(header_line.format(usb="usb", dev="dev", size="size", vendor="vendor", model="model", wwn="wwn"))
-    print("-"*80)
+    header_line = "{usb:<12}\t{dev:<12}\t{size:<12}\t{vendor:<12}\t{model:<20}\t{wwn:<20}\t{devfile:<12}"
+    print(header_line.format(usb="usb", dev="dev", size="size", vendor="vendor", model="model", wwn="wwn", devfile="dev_file"))
+    print("-"*120)
     for path in outs:
         path = path.decode("utf-8")
         m = re.match(hostReg, path)
@@ -45,9 +45,17 @@ if __name__ == "__main__":
                     "wwn"       : get_file_content ("{0}/wwid".format(devpath)),
                     "model"     : get_file_content ("{0}/model".format(devpath)),
                 }
+                # calculate size in TB
                 size = get_file_content ("{0}/block/*/size".format(devpath))
                 size = float(size)*512/(2**40) if size else 0.0
                 info["size"] = "{:.1f}TB".format(size)
+
+                # get device path
+                dev_file = '/dev/' + subprocess.check_output('basename `ls -d {0}/block/*`'.format(devpath), shell=True).strip().decode("utf-8")
+                info["dev_file"] = dev_file
+
                 infos.append(info)
     for info in infos:
-        print(header_line.format(usb=info["usb"], dev=info["dev"], size=info["size"], vendor=info["vendor"], model=info["model"], wwn=info["wwn"]))
+        print(header_line.format(usb=info["usb"], dev=info["dev"], 
+            size=info["size"], vendor=info["vendor"], model=info["model"], 
+            wwn=info["wwn"], devfile=info["dev_file"]))
