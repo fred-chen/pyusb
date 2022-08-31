@@ -26,21 +26,18 @@ if __name__ == "__main__":
     print("-"*80)
     for path in outs:
         path = path.decode("utf-8")
-        # print(path)
         m = re.match(hostReg, path)
         t = m["target"] if m else ""
         usb = m["usb"] if m else ""
-        # print("usb bus: {0}".format(usb))
-        # print("target number: {0}".format(t))
         target_path = path + "/" + t + "*"
         devpaths = subprocess.check_output("ls -d {0}".format(target_path), shell=True).splitlines()
         for devpath in devpaths:
             devpath = devpath.decode("utf-8")
-            # print (devpath)
             m = re.match(devReg, devpath)
             d = m["dev"] if m else ""
-            # print ("dev number: {0}".format(d))
-            if d:
+            # type 0 is disk
+            type = int(get_file_content ("{0}/type".format(devpath)))
+            if d and type == 0:
                 info = {
                     "usb"       : usb,
                     "dev"       : d,
@@ -52,7 +49,5 @@ if __name__ == "__main__":
                 size = float(size)*512/(2**40) if size else 0.0
                 info["size"] = "{:.1f}TB".format(size)
                 infos.append(info)
-            else:
-                continue
     for info in infos:
         print(header_line.format(usb=info["usb"], dev=info["dev"], size=info["size"], vendor=info["vendor"], model=info["model"], wwn=info["wwn"]))
