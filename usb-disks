@@ -22,7 +22,8 @@ def get_file_content(path):
 if __name__ == "__main__":
     infos = []
     header_line = "{usb:<12}\t{dev:<12}\t{size:<12}\t{vendor:<12}\t{model:<20}\t{wwn:<20}\t{devfile:<12}"
-    print(header_line.format(usb="usb", dev="dev", size="size", vendor="vendor", model="model", wwn="wwn", devfile="dev_file"))
+    print(header_line.format(usb="usb", dev="dev", size="size", 
+        vendor="vendor", model="model", wwn="wwn", devfile="dev_file"))
     print("-"*120)
     for path in outs:
         path = path.decode("utf-8")
@@ -51,7 +52,8 @@ if __name__ == "__main__":
                 info["size"] = "{:>5.1f} TB".format(size)
 
                 # get device path
-                dev_file = '/dev/' + subprocess.check_output('basename `ls -d {0}/block/*`'.format(devpath), shell=True).strip().decode("utf-8")
+                dev_file = '/dev/' + subprocess.check_output('basename `ls -d {0}/block/*`'.format(devpath), 
+                                                        shell=True).strip().decode("utf-8")
                 info["dev_file"] = dev_file
 
                 infos.append(info)
